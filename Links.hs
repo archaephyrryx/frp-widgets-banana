@@ -1,37 +1,52 @@
-{-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables, TypeFamilies #-}
 module Widgets.Links where
 
-
 import Widgets.Core
-import Tidings
 
-import Graphics.UI.WX hiding (Event)
-import Reactive.Banana
-import Reactive.Banana.WX
-import Util
+-- | Unified SoftLink and LiquidLink
+--
+--  Because there is a natural division of UI elements and FRP logic in
+--  reactive-banana, SoftLinks and LiquidLinks differ only in their
+--  construction, not in their underlying structure. Therefore they are
+--  consolidated into a single `Link` type, with the FRP logic dictated
+--  by which constructor is used
+data Link t a = Link
+  { link     :: LButton
+  , actuated :: Tidings t a
+  }
 
-type SoftLink a = Button a
+type LButton = Button ()
+
+instance forall a t. Courier (Link t a) where
+    type Tidal (Link t a) = a
+    type Element (Link t a) = LButton
+    type Temporal (Link t a) = t
+    element = link
+    tide = actuated
 
 softLink :: forall a b t. Frameworks t
-         => SoftLink b
-         -> a      -- Value to hold
-         -> Moment t (Tidings t a)
-softLink soft grist = do
+         => LButton
+         -> (a -> String)
+         -> a
+         -> Moment t (Link t a)
+softLink soft dval grist = do
+  sink soft [ text :== (pure $ dval grist) ]
   click <- event0 soft command
   let b = (pure grist)
-  return $ tidings b $ b <@ click
 
--- | Mutable-content softlink
-type LiquidLink a = Button a
+  let actuated = tidings b $ b <@ click
+      link = soft
+  return $ Link{..}
 
--- | The standard constructor for liquidlinks
 liquidLink :: forall a b t. Frameworks t
-           => LiquidLink b
-           -> Behavior t (a -> String) -- Value to display
-           -> Behavior t a -- Value to hold
-           -> Moment t (Tidings t a)
+           => LButton
+           -> Behavior t (a -> String)
+           -> Behavior t a
+           -> Moment t (Link t a)
 liquidLink liquid bdval fluid = do
     sink liquid [ text :== bdval <*> fluid ]
     click <- event0 liquid command
     let b = fluid
-    return $ tidings b $ b <@ click
+        actuated = tidings b $ b <@ click
+        link = liquid
+    return $ Link{..}

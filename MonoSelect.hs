@@ -4,19 +4,14 @@ module Widgets.MonoSelect where
 
 
 import Widgets.Core
-import Tidings
 
-import Graphics.UI.WX hiding (Event)
-import Reactive.Banana
-import Reactive.Banana.WX
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.Maybe
-import Util
 
 type MonoSelect b = SingleListBox b
 
-monoSelect :: forall a b t. (Ord a, Frameworks t) 
+monoSelect :: forall a b t. (Ord a, Frameworks t)
   => MonoSelect b
   -> Behavior t [a] -- ^ List of values
   -> Behavior t [a] -- ^ Selected value (singleton or empty)

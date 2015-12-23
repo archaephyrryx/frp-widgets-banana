@@ -3,11 +3,7 @@
 module Widgets.MultiSelect where
 
 import Widgets.Core
-import Tidings
 
-import Graphics.UI.WX hiding (Event)
-import Reactive.Banana
-import Reactive.Banana.WX
 import qualified Data.Map as Map
 import Data.Map (Map)
 
