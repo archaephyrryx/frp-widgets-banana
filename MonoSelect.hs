@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses #-}
 
 module Widgets.MonoSelect where
 
@@ -9,14 +9,24 @@ import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.Maybe
 
-type MonoSelect b = SingleListBox b
+type MonoSel = forall a. SingleListBox a
 
-monoSelect :: forall a b t. (Ord a, Frameworks t)
-  => MonoSelect b
-  -> Behavior t [a] -- ^ List of values
-  -> Behavior t [a] -- ^ Selected value (singleton or empty)
-  -> Behavior t (a -> RenderedValue) -- ^ Display for regular values
-  -> Moment t (Tidings t [a])
+data MonoSelect a = { _list :: MonoSel
+                    , _selection :: Tidings [a]
+                    }
+
+instance Courier (MonoSelect a) a where
+  type Element (MonoSelect a) = MonoSel
+  tide = _selection
+  element = _list
+
+
+monoSelect :: Ord a
+  => MonoSel
+  -> Behavior [a] -- ^ List of values
+  -> Behavior [a] -- ^ Selected value (singleton or empty)
+  -> Behavior (a -> RenderedValue) -- ^ Display for regular values
+  -> MomentIO (MonoSelect a)
 monoSelect mono bitems bsel bdisplay = do
     sink mono [ items :== map <$> bdisplay <*> bitems ]
 
@@ -33,5 +43,6 @@ monoSelect mono bitems bsel bdisplay = do
 
     let bindices2 = Map.fromList . zip [0..] <$> bitems
     esel <- eventSelection mono
-    return $ tidings bsel $
-            lookupIndex <$> bindices2 <@> (one <$> esel)
+    let
+      selection = tidings bsel $ lookupIndex <$> bindices2 <@> (one <$> esel)
+    return $ MonoSelect mono selection

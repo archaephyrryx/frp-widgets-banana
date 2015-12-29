@@ -9,20 +9,25 @@ import Data.Map (Map)
 
 -- Widget stuff
 
-type MultiSelect b = MultiListBox b
+type MultiSel  = forall a. MultiListBox a
 
-multiSelect :: forall t a b. (Ord a, Frameworks t)
-            => MultiSelect b
-            -> Behavior t [a]
-            -> Behavior t [a]
-            -> Behavior t (a -> String)
-            -> Moment t (Tidings t [a])
+data MultiSelect a =
+     MultiSelect { _list :: MultiSel
+                 , _selections :: Tidings [a]
+                 }
+
+multiSelect :: Ord a
+            => MultiSel
+            -> Behavior [a]
+            -> Behavior [a]
+            -> Behavior (a -> RenderedValue)
+            -> MomentIO (MultiSelect a)
 multiSelect multi bitems bsels bdisplay = do
     -- animate output items
     sink multi [ items :== map <$> bdisplay <*> bitems ]
 
     -- animate output selection
-    let bindices :: Behavior t (Map a Int)
+    let bindices :: Behavior (Map a Int)
         bindices = indexify bitems
         indexify = ((Map.fromList . flip zip [0..]) <$>)
         bsindices   = lookupIndices <$> bindices <*> bsels
@@ -38,12 +43,14 @@ multiSelect multi bitems bsels bdisplay = do
     -- sink listBox [ selection :== stepper (-1) $ bSelection <@ eDisplay ]
 
     -- user selection
-    let bindices2 :: Behavior t (Map Int a)
+    let bindices2 :: Behavior (Map Int a)
         bindices2 = Map.fromList . zip [0..] <$> bitems
     esel <- eventSelections multi
-    return $ tidings bsels $ lookupIndices <$> bindices2 <@> esel
+    let
+      selects = tidings bsels $ lookupIndices <$> bindices2 <@> esel
+    return $ MultiSelect multi selects
 
-eventSelections :: forall b t. Frameworks t => MultiListBox b -> Moment t (Event t [Int])
+eventSelections :: MultiListBox b -> MomentIO (Event [Int])
 eventSelections w = do
     liftIO $ fixSelectionsEvent w
     addHandler <- liftIO $ event1ToAddHandler w (event0ToEvent1 select)

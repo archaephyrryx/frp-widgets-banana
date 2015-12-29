@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, RecursiveDo, ScopedTypeVariables, TypeFamilies #-}
+{-# LANGUAGE RecordWildCards, RecursiveDo, ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
 
 module Widgets.Ranger where
 
@@ -7,9 +7,9 @@ import Widgets.Core
 -- | A 'Ranger', which consists of an incrementor and decrementor for a
 -- dynamic range and dynamic value within that range; works for any
 -- bounded enumerable value
-data Ranger t a = Ranger
+data Ranger a = Ranger
   { _rangeRG :: Range
-  , _currentRG :: Tidings t a
+  , _currentRG :: Tidings a
   }
 
 data Range = Range
@@ -27,21 +27,19 @@ range f = range' f [ text := "<" ] [] [ text := ">" ]
 instance Widget Range where
     widget w = margin 10 $ row 5 $ map ($w) [widget._prev, widget._cur, widget._next]
 
-instance Courier (Ranger t a) where
-  type Tidal (Ranger t a) = a
-  type Element (Ranger t a) = Range
-  type Temporal (Ranger t a) = t
+instance Courier (Ranger a) a where
+  type Element (Ranger a) = Range
   tide = _currentRG
   element = _rangeRG
 
 -- | Create a 'RelNav'.
-ranger :: forall a t. (Ord a, Enum a, Frameworks t)
+ranger :: (Ord a, Enum a)
     => Range
-    -> Behavior t a -- ^ Current location
-    -> Behavior t a -- ^ 'Zero' value
-    -> Behavior t a -- ^ Maximum value (zero-indexed)
-    -> Behavior t (a -> RenderedValue) -- ^ display for an item
-    -> Moment t (Ranger t a)
+    -> Behavior a -- ^ Current location
+    -> Behavior a -- ^ 'Zero' value
+    -> Behavior a -- ^ Maximum value (zero-indexed)
+    -> Behavior (a -> RenderedValue) -- ^ display for an item
+    -> MomentIO (Ranger a)
 ranger range bloc bzer bmax bdisplay = do
     let (Range prev cur next) = range
     let bNotFirst = (>) <$> bloc <*> bzer
@@ -54,11 +52,11 @@ ranger range bloc bzer bmax bdisplay = do
     ePrev <- event0 prev command
     eNext <- event0 next command
 
-    let bLocApp = (#) <$> bloc
-        eChange = unions (map (bLocApp<@>)
-            [ pred <$ whenE bNotFirst ePrev
-            , succ <$ whenE bNotLast  eNext
-            ])
+    let
+        eDelta :: forall n. Enum n => Event (n -> n)
+        eDelta = unions [ pred <$ whenE bNotFirst ePrev
+                        , succ <$ whenE bNotLast  eNext ]
+        eChange = flip ($) <$> bloc <@> eDelta
 
         _currentRG = tidings bloc eChange
         _rangeRG   = range

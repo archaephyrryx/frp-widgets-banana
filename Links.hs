@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, ScopedTypeVariables, TypeFamilies #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
 module Widgets.Links where
 
 import Widgets.Core
@@ -10,25 +10,22 @@ import Widgets.Core
 --  construction, not in their underlying structure. Therefore they are
 --  consolidated into a single `Link` type, with the FRP logic dictated
 --  by which constructor is used
-data Link t a = Link
+data Link a = Link
   { link     :: LButton
-  , actuated :: Tidings t a
+  , actuated :: Tidings a
   }
 
 type LButton = Button ()
 
-instance forall a t. Courier (Link t a) where
-    type Tidal (Link t a) = a
-    type Element (Link t a) = LButton
-    type Temporal (Link t a) = t
+instance Courier (Link a) a where
+    type Element (Link a) = LButton
     element = link
     tide = actuated
 
-softLink :: forall a b t. Frameworks t
-         => LButton
+softLink :: LButton
          -> (a -> String)
          -> a
-         -> Moment t (Link t a)
+         -> MomentIO (Link a)
 softLink soft dval grist = do
   sink soft [ text :== (pure $ dval grist) ]
   click <- event0 soft command
@@ -38,11 +35,10 @@ softLink soft dval grist = do
       link = soft
   return $ Link{..}
 
-liquidLink :: forall a b t. Frameworks t
-           => LButton
-           -> Behavior t (a -> String)
-           -> Behavior t a
-           -> Moment t (Link t a)
+liquidLink :: LButton
+           -> Behavior (a -> String)
+           -> Behavior a
+           -> MomentIO (Link a)
 liquidLink liquid bdval fluid = do
     sink liquid [ text :== bdval <*> fluid ]
     click <- event0 liquid command
