@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, RankNTypes #-}
 
 module Widgets.MultiSelect where
 
@@ -10,6 +10,7 @@ import Data.Map (Map)
 -- Widget stuff
 
 type MultiSel  = forall a. MultiListBox a
+type MultiSel  =      MultiListBox ()
 
 data MultiSelect a =
      MultiSelect { _list :: MultiSel
@@ -27,8 +28,7 @@ multiSelect multi bitems bsels bdisplay = do
     sink multi [ items :== map <$> bdisplay <*> bitems ]
 
     -- animate output selection
-    let bindices :: Behavior (Map a Int)
-        bindices = indexify bitems
+    let bindices = indexify bitems
         indexify = ((Map.fromList . flip zip [0..]) <$>)
         bsindices   = lookupIndices <$> bindices <*> bsels
 
@@ -43,11 +43,9 @@ multiSelect multi bitems bsels bdisplay = do
     -- sink listBox [ selection :== stepper (-1) $ bSelection <@ eDisplay ]
 
     -- user selection
-    let bindices2 :: Behavior (Map Int a)
-        bindices2 = Map.fromList . zip [0..] <$> bitems
+    let bindices2 = Map.fromList . zip [0..] <$> bitems
     esel <- eventSelections multi
-    let
-      selects = tidings bsels $ lookupIndices <$> bindices2 <@> esel
+    let selects = tidings bsels $ lookupIndices <$> bindices2 <@> esel
     return $ MultiSelect multi selects
 
 eventSelections :: MultiListBox b -> MomentIO (Event [Int])

@@ -10,21 +10,26 @@ import Reactive.Banana
 import Reactive.Banana.WX
 import Reactive.Banana.Frameworks
 import Control.Applicative
+import Util ((?.))
 
-data StaticDynamic a = Static a
-                     | Dynamic (Behavior a)
+data StaticDynamic a = Static { constant :: a }
+                     | Dynamic { variant :: (Behavior a) }
+
+isStatic, isDynamic :: StaticDynamic a -> Bool
+isStatic  (Static  _) = True ; isStatic  _ = False
+isDynamic (Dynamic _) = True ; isDynamic _ = False
 
 instance Functor StaticDynamic where
   f`fmap`(Static x) = Static (f x)
   f`fmap`(Dynamic bx) = Dynamic (f <$> bx)
 
 dyn :: StaticDynamic a -> StaticDynamic a
-dyn (Static x) = Dynamic (pure x)
-dyn x@(Dynamic _) = x
+dyn = isStatic?.dynimate
+  where
+    dynimate = Dynamic . pure . constant
 
 flux :: StaticDynamic a -> Behavior a
-flux (Static x) = pure x
-flux (Dynamic bx) = bx
+flux = variant.dyn
 
 instance Applicative StaticDynamic where
   pure = Static
