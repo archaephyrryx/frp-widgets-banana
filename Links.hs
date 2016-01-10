@@ -28,7 +28,7 @@ softLink :: LButton
          -> MomentIO (Link a)
 softLink soft dval grist = do
   sink soft [ text :== (pure $ dval grist) ]
-  click <- event0 soft command
+  click <- eClick soft
   let b = (pure grist)
 
   let actuated = tidings b $ b <@ click
@@ -41,7 +41,7 @@ liquidLink :: LButton
            -> MomentIO (Link a)
 liquidLink liquid bdval fluid = do
     sink liquid [ text :== bdval <*> fluid ]
-    click <- event0 liquid command
+    click <- eClick liquid
     let b = fluid
         actuated = tidings b $ b <@ click
         link = liquid

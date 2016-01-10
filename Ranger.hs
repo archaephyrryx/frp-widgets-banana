@@ -49,8 +49,8 @@ ranger range bloc bzer bmax bdisplay = do
     sink cur [ curview :== bdisplay <*> bloc ]
     sink next [ enabled :== bNotLast ]
 
-    ePrev <- event0 prev command
-    eNext <- event0 next command
+    ePrev <- eClick prev
+    eNext <- eClick next
 
     let
         eDelta :: forall n. Enum n => Event (n -> n)

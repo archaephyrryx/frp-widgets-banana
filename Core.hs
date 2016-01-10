@@ -39,3 +39,6 @@ drown w p'' =
   in do
     liftIO $ set w p
     sink w p'
+
+eClick :: Commanding w => w -> MomentIO (Event ())
+eClick x = event0 x command

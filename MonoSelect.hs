@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
 
 module Widgets.MonoSelect where
 
@@ -8,14 +8,22 @@ import Widgets.Core
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.Maybe
+import Util
 
+{-
 type MonoSel = forall a. SingleListBox a
+---}
+--{-
+type MonoSel = SingleListBox ()
+--}
 
-data MonoSelect a = { _list :: MonoSel
-                    , _selection :: Tidings [a]
-                    }
 
-instance Courier (MonoSelect a) a where
+data MonoSelect a = MonoSelect
+                  { _list :: MonoSel
+                  , _selection :: Tidings [a]
+                  }
+
+instance Courier (MonoSelect a) [a] where
   type Element (MonoSelect a) = MonoSel
   tide = _selection
   element = _list

@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables, RankNTypes, MultiParamTypeClasses, TypeFamilies #-}
 
 module Widgets.MultiSelect where
 
@@ -9,13 +9,22 @@ import Data.Map (Map)
 
 -- Widget stuff
 
+{-
 type MultiSel  = forall a. MultiListBox a
+--}
+--{-
 type MultiSel  =      MultiListBox ()
+--}
 
 data MultiSelect a =
      MultiSelect { _list :: MultiSel
                  , _selections :: Tidings [a]
                  }
+
+instance Courier (MultiSelect a) [a] where
+    type Element (MultiSelect a) = MultiSel
+    tide = _selections
+    element = _list
 
 multiSelect :: Ord a
             => MultiSel
