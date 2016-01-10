@@ -1,17 +1,31 @@
-{-# LANGUAGE RecursiveDo, RecordWildCards #-}
+{-# LANGUAGE RecursiveDo, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, TypeFamilies #-}
 
 module Widgets.Obscura where
 
 import Widgets.Core
 import Widgets.Links
 
-obscura :: Behavior (a -> String) -- Image URL to display
-        -> Behavior a -- Value to hold
-        -> UI (LiquidLink a)
-obscura bCurler fluid = do
-    link <- image #. "obscura" # set forbidContext ()
-    element link # sink src (bCurler <*> fluid)
+type Obscure = BitmapButton ()
 
-    let _elementLL = link
-        _fluxLL = fluid
-    return LiquidLink{..}
+data Obscura a = Obscura
+               { _image :: Obscure
+               , _snapshots :: Tidings a
+               }
+
+instance Courier (Obscura a) a where
+  type Element (Obscura a) = Obscure
+  element = _image
+  tide = _snapshots
+
+obscura :: Obscure
+        -> Behavior (a -> String)
+        -> Behavior a
+        -> MomentIO (Obscura a)
+obscura obs bLink fluid = do
+    sink obs [ picture :== (bLink <*> fluid) ]
+    click <- eClick obs
+
+    let b = fluid
+        _snapshots = tidings b $ b <@ click
+        _image = obs
+    return Obscura{..}

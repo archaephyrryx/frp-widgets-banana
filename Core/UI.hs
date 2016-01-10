@@ -6,6 +6,7 @@ module Widgets.Core.UI ( module Widgets.Core.UI
                        ) where
 
 import Graphics.UI.WX hiding (Event, newEvent, empty, Identity)
+import Util (one)
 
 -- As we don't have UI Element, we are using string here temporarily to
 -- represent the rendered items on the list
@@ -18,6 +19,9 @@ class (Show a) => Stringent a where
 
 instance Stringent String where
     stringify = id
+
+instance Stringent Char where
+    stringify = one
 
 renderValue :: Stringent a => a -> RenderedValue
 renderValue = stringify
