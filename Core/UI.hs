@@ -3,8 +3,10 @@
 
 module Widgets.Core.UI ( module Widgets.Core.UI
                        , module Graphics.UI.WX
+                       , module Graphics.UI.WXCore
                        ) where
 
+import Graphics.UI.WXCore hiding (Event, Timer, empty, Identity, newEvent)
 import Graphics.UI.WX hiding (Event, newEvent, empty, Identity)
 import Util (one)
 
@@ -16,6 +18,10 @@ type ChildValue = Window ()
 
 class (Show a) => Stringent a where
     stringify :: a -> String
+    stringify = show
+
+instance Stringent Int where
+    stringify = show
 
 instance Stringent String where
     stringify = id

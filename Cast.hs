@@ -1,22 +1,26 @@
-{-# LANGUAGE RecordWildCards, RecursiveDo, ScopedTypeVariables, MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE RecursiveDo           #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Widgets.Cast where
 
-import Widgets.Core
+import Widgets.Core hiding (wrap, Row, Table, label)
 import Widgets.Links
 import Widgets.Obscura
 import Widgets.Ranger
+import Widgets.Table
 import Data.List.Split
+import Util
 
-data Cast = Cast { _cast :: ECast, _actuate :: Tidings Int }
+data Cast = Cast { _cast :: ECast
+                 , _actuate :: Tidings Int }
 
-newtype ECast = ECast { _elem :: [Link Int] }
-
-serialize :: Widget a => [a] -> Layout
-serialize = column 5 . map widget
+data ECast = ECast { _elem :: Tabular }
 
 instance Widget ECast where
-  widget = serialize . _elem
+  widget = widget . _table . _elem
 
 instance Courier Cast Int where
   type Element Cast = ECast
@@ -34,190 +38,96 @@ type Label a = StaticDynamic (a -> String)
 type Wrapper a = StaticDynamic (a -> Link Int -> Row)
 type Collector = StaticDynamic ([Row] -> [Row])
 
-data Format a = Format { label   :: Label a
-                         , wrap    :: Wrapper a
-                         , collect :: Collector t
-                         }
+data Format a = Format { label :: Label a, wrap :: Wrapper a, collect :: Collector }
 
-data CastType a = Cask { bContents :: Behavior [a]
-                       , pagesize  :: Int
-                       , current   :: Behavior Int
-                       , format    :: Format a
-                       }
-                | Case { contents  :: [a]
-                       , bPagesize :: Behavior Int
-                       , current   :: Behavior Int
-                       , format    :: Format a
-                       }
-
-genCast :: CastType a
-        -> MomentIO (Cast t)
-genCast x = case x of
-              Cask{..} ->
-                mdo {
-                  let values = (map fst . zip [0..] <$> bContents)
-                      bBits = length <$> values
-                      bBites = ((`cdiv`pagesize) <$> bBits)
-                      bChunks = chunksOf pagesize <$> values
-                      bValues = blTranspose pagesize (-1) ((!!) <$> bChunks <*> current)
-
-                  liquids <- sequence (zipWith liquidLink (replicate pagesize ((.) <$> (pure label) <*> (((.abs).(!!)) <$> bFull))) bValues)
-
-    let eLiquids = (map (rumors.tideLink) liquids)
-        eActua = head <$> unions (eLiquids++[ (-1) <$ eRanger])
-
-    liquidBox <- UI.table
-    element liquidBox # sink (mapkinder (\(f,x) -> f $ x)) (zip <$> (map fRower <$> ((!!) <$> (chunksOf biteSize <$> bFull) <*> bThis)) <*> (filtrate <$> (lbTranspose $ map (((>=0) <$>).getFlux) liquids) <*> (pure liquids)))
-    wrapper <- column [ row [ element liquidBox ], row [element range] ]
-
-    let _elementCK = wrapper
-        _actuateCK = tidings (pure (-1)) $ eActua
-    return Cask{..}
+data CastType a = Cask { bContents :: Behavior [a],  pagesize ::          Int, current :: Tidings Int, format :: Format a }
+                | Case { contents  ::          [a], bPagesize :: Behavior Int, current :: Tidings Int, format :: Format a }
 
 
-derangedCask bFull biteSize range bLabel bRower bCombo = do
-    let values = (map fst . zip [0..] <$> bFull)
-        bBits = length <$> values
-        bBites = ((`cdiv`biteSize) <$> bBits)
-        tRanger = userLoc range
-        eRanger = rumors tRanger
-        bRanger = facts tRanger
-        bFirst :: Behavior Int
-        bFirst = pure 0
-        bLast = pred <$> bBites
-    bThis <- stepper 0 $ eRanger
+bFinal :: CastType a -> Behavior Int
+bFinal x = pred <$> bFinal' x
+  where
+    bFinal' (Cask{..}) = (`cdiv`pagesize) . length <$> bContents
+    bFinal' (Case{..}) =   cdiv  (length contents) <$> bPagesize
 
+bIndexChunks :: CastType a -> Behavior [[Int]]
+bIndexChunks x = case x of
+                   (Cask{..}) -> chunksOf pagesize . evaluate <$> bContents
+                   (Case{..}) -> flip chunksOf (evaluate contents) <$> bPagesize
+  where
+    evaluate :: forall a. [a] -> [Int]
+    evaluate = map fst . zip [0..]
+
+bValueChunks :: CastType a -> Behavior [[a]]
+bValueChunks (Cask{..}) = chunksOf pagesize <$> bContents
+bValueChunks (Case{..}) = flip chunksOf contents <$> bPagesize
+
+
+sdIndexLabel :: CastType a -> StaticDynamic (Int -> String)
+sdIndexLabel c@(Cask{..}) = Dynamic $ (.) <$> bLabor <*> bIndex
+  where
+    bLabor = flux . label $ format
+    bIndex = (\xs i -> xs !! (abs i)) <$> bContents
+sdIndexLabel c@(Case{..}) = Static $ labor . index
+  where
+    labor = freeze . label $ format
+    index = (contents!!)
+
+genCast :: CastType a -> Table -> MomentIO Cast
+genCast x@(Cask{..}) tab = mdo
     let
-        bChunks = chunksOf biteSize <$> values
-        bValues = blTranspose biteSize (-1) ((!!) <$> bChunks <*> bThis)
+        indexChunks :: Behavior [[Int]] -- ^ values, chunked by pagesize
+        indexChunks = bIndexChunks x
+        bIndices :: [Behavior Int] -- ^ collated values in the current chunk
+        bIndices = blTranspose pagesize (-1) $ (!!) <$> indexChunks <*> (facts current)
+        bLabelon :: Behavior (Int -> String) -- ^ label converter: index to value-string
+        bLabelon = flux . sdIndexLabel $ x
+        secrete :: Behavior Int -> MomentIO (Link Int)
+        secrete y = (liftIO $ preLink tab) >>= \l -> liquidLink l bLabelon y
+    liquids <- sequence . map secrete $ bIndices
+    let
+        eLiquids = map portents liquids
+        eActua = priorityUnion (((-1) <$ rumors current):eLiquids)
+        sdCollect = collect $ format
+        sdWrap = wrap $ format
+    let
+        valueChunks = bValueChunks x
+        bValues = (!!) <$> valueChunks <*> (facts current)
+        bLinks :: Behavior [Link Int]
+        bLinks = (`filtrate`liquids) <$> (lbTranspose $ map (((>=0) <$>).(flux.rubicon)) liquids)
+        rawRows :: Behavior [Row]
+        rawRows = zipWith <$> flux sdWrap <*> bValues <*> bLinks
+    liquidBox <- tabulate tab $ combine sdCollect rawRows
 
-    liquids <- sequence (zipWith liquidLink (replicate biteSize ((.) <$> bLabel <*> (((.abs).(!!)) <$> bFull))) bValues)
+    let _cast = ECast liquidBox
+        _actuate = tidings (pure (-1)) $ eActua
+    return Cast{..}
+genCast x@(Case{..}) tab = mdo
+    let
+        indices :: [Int]
+        indices = map fst . zip [0..] $ contents
+        label = freeze . sdIndexLabel $ x
+        extrude :: Int -> MomentIO (Link Int)
 
-    let eLiquids = (map (rumors.tideLink) liquids)
-        eActua = head <$> unions (eLiquids++[ (-1) <$ eRanger])
+        extrude y = (liftIO $ preLink tab) >>= \l -> softLink l label y
+    softs <- sequence . map extrude $ indices
 
-    liquidBox <- UI.table
-    element liquidBox # sink (kinder (\(f,xs) -> f $ xs)) ((,) <$> bCombo <*> (zipWith ($) <$> (map <$> bRower <*> ((!!) <$> (chunksOf biteSize <$> bFull) <*> bThis)) <*> (filtrate <$> (lbTranspose $ map (((>=0) <$>).getFlux) liquids) <*> (pure liquids))))
+    let bChunks = (`chunksOf`softs) <$> bPagesize
+        eSofts = map blood softs
+        bSofts = (!!) <$> bChunks <*> (facts current)
+        eActua = priorityUnion (((-1) <$ rumors current):eSofts)
+        valueChunks = bValueChunks x
+        curValues = (!!) <$> valueChunks <*> facts current
+        bRows :: Behavior [Row]
+        bRows = zipWith <$> (flux . wrap $ format) <*> curValues <*> bSofts
 
-    let _elementCK = liquidBox
-        _actuateCK = tidings (pure (-1)) $ eActua
-    return Cask{..}
+    softBox <- tabulate tab $ combine (collect format) bRows
 
+    let _cast = ECast softBox
+        _actuate = tidings (pure (-1)) $ eActua
+    return Cast{..}
 
-                }
-              Case{..} ->
-                do {
-
-                }
 {-
-softCast :: forall t. Frameworks t
-         => [a] -- ^ Full list
-         -> Behavior t Int -- ^ Number per page
-         -> Caster t a
-softCast lFull bBiteSize label fRower = do
-    let bits = length lFull
-        values = [0..(bits-1)]
-        bBites = (bits`cdiv`) <$> bBiteSize
-
-  Internal Ranger creation
-    rec range <- ranger bThis bFirst bLast (pure (string.show.succ))
-        let tRanger = userLoc range
-            eRanger = rumors tRanger
-            bRanger = facts tRanger
-            bFirst = pure 0
-            bLast = pred <$> bBites
-        bThis <- stepper 0 $ eRanger
-
-    softs <- sequence (zipWith (softLink) (map (label) lFull) (values))
-
-    let bChunks = chunksOf <$> bBiteSize <*> (pure softs)
-        eSofts = (map (rumors.tideLink) softs)
-        bSofts = (!!) <$> bChunks <*> bThis
-        eActua = head <$> unions (eSofts++[ (-1) <$ eRanger ])
-
-    softBox <- UI.table
-    element softBox # sink (mapkinder (\(f,x) -> f $ x)) (zip (map fRower lFull) <$> bSofts)
-
-    wrapper <- column [ row [element softBox ], row [element range] ]
-
-    let _elementCE = wrapper
-        _actuateCE = tidings (pure (-1)) $ eActua
-    return Case{..}
-
--- | Cast builder for Casks only, which relies on an FR (possibly pure) list to display
--- sections of; the page size must be a pure integer value
-liquidCast :: Behavior [a] -- ^ Full list
-           -> Int -- ^ Number per page (cannot be FR)
-           -> (a -> String) -- ^ Label for the liquidlinks
-           -> (a -> (LiquidLink Int -> UI Element)) -- ^ Row transformer for items
-           -> UI Cask
-liquidCast bFull biteSize label fRower = do
-    let values = (map fst . zip [0..] <$> bFull)
-        bBits = length <$> values
-        bBites = ((`cdiv`biteSize) <$> bBits)
-
-    rec range <- ranger bThis bFirst bLast (pure (string.show.succ))
-        let tRanger = userLoc range
-            eRanger = rumors tRanger
-            bRanger = facts tRanger
-            bFirst = pure 0
-            bLast = pred <$> bBites
-        bThis <- stepper 0 $ eRanger
-
-    let
-        bChunks = chunksOf biteSize <$> values
-        bValues = blTranspose biteSize (-1) ((!!) <$> bChunks <*> bThis)
-
-    liquids <- sequence (zipWith liquidLink (replicate biteSize ((.) <$> (pure label) <*> (((.abs).(!!)) <$> bFull))) bValues)
-
-    let eLiquids = (map (rumors.tideLink) liquids)
-        eActua = head <$> unions (eLiquids++[ (-1) <$ eRanger])
-
-    liquidBox <- UI.table
-    element liquidBox # sink (mapkinder (\(f,x) -> f $ x)) (zip <$> (map fRower <$> ((!!) <$> (chunksOf biteSize <$> bFull) <*> bThis)) <*> (filtrate <$> (lbTranspose $ map (((>=0) <$>).getFlux) liquids) <*> (pure liquids)))
-    wrapper <- column [ row [ element liquidBox ], row [element range] ]
-
-    let _elementCK = wrapper
-        _actuateCK = tidings (pure (-1)) $ eActua
-    return Cask{..}
-
-
-derangedCask :: Behavior [a] -- ^ Full list
-           -> Int -- ^ Number per page (cannot be FR)
-           -> Ranger Int -- ^ External ranger
-           -> Behavior (a -> String) -- ^ Label for the liquidlinks
-           -> Behavior (a -> LiquidLink Int -> UI Element) -- ^ Row transformer for items
-           -> Behavior ([UI Element] -> [UI Element]) -- ^ Row combiner for items
-           -> UI Cask
-derangedCask bFull biteSize range bLabel bRower bCombo = do
-    let values = (map fst . zip [0..] <$> bFull)
-        bBits = length <$> values
-        bBites = ((`cdiv`biteSize) <$> bBits)
-        tRanger = userLoc range
-        eRanger = rumors tRanger
-        bRanger = facts tRanger
-        bFirst :: Behavior Int
-        bFirst = pure 0
-        bLast = pred <$> bBites
-    bThis <- stepper 0 $ eRanger
-
-    let
-        bChunks = chunksOf biteSize <$> values
-        bValues = blTranspose biteSize (-1) ((!!) <$> bChunks <*> bThis)
-
-    liquids <- sequence (zipWith liquidLink (replicate biteSize ((.) <$> bLabel <*> (((.abs).(!!)) <$> bFull))) bValues)
-
-    let eLiquids = (map (rumors.tideLink) liquids)
-        eActua = head <$> unions (eLiquids++[ (-1) <$ eRanger])
-
-    liquidBox <- UI.table
-    element liquidBox # sink (kinder (\(f,xs) -> f $ xs)) ((,) <$> bCombo <*> (zipWith ($) <$> (map <$> bRower <*> ((!!) <$> (chunksOf biteSize <$> bFull) <*> bThis)) <*> (filtrate <$> (lbTranspose $ map (((>=0) <$>).getFlux) liquids) <*> (pure liquids))))
-
-    let _elementCK = liquidBox
-        _actuateCK = tidings (pure (-1)) $ eActua
-    return Cask{..}
-
-
 oculus :: Behavior [a] -- ^ Full list
        -> Int -- ^ Number per page (cannot be FR)
        -> Ranger Int -- ^ External ranger

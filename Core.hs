@@ -2,21 +2,30 @@
 
 module Widgets.Core ( Prop''((:=~))
                     , module Widgets.Core
+                    , module Data.Typeable
                     , module Widgets.Core.UI
                     , module Widgets.Core.FRP
                     ) where
 
 import Widgets.Core.UI
 import Widgets.Core.FRP
+import Data.Typeable
 import Util (condense)
 
 infixr 0 :=~
 
--- Wrapper for bundling UI elements and their reactive components
+-- | Courier - a bearer of tidings
+-- Courier types are wrappers for bundling UI elements with their reactive components
 class Courier c t | c -> t where
   type Element c :: *
-  tide :: c -> Tidings t
   element :: c -> Element c
+  tide :: c -> Tidings t
+  tide = tidings <$> omens <*> portents
+  -- Optional declarations
+  omens :: c -> Behavior t
+  omens = facts . tide
+  portents :: c -> Event t
+  portents = rumors . tide
 
 data Prop'' w where
   (:=~) :: (Attr w a) -> StaticDynamic a -> Prop'' w
