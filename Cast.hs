@@ -1,9 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE RecursiveDo           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
-
 module Widgets.Cast where
 
 import Widgets.Core hiding (wrap, Row, Table, label)
@@ -12,7 +12,7 @@ import Widgets.Obscura
 import Widgets.Ranger
 import Widgets.Table
 import Data.List.Split
-import Util
+import Util hiding (visible)
 
 data Cast = Cast { _cast :: ECast
                  , _actuate :: Tidings Int }
@@ -106,22 +106,42 @@ genCast x@(Case{..}) tab = mdo
     let
         indices :: [Int]
         indices = map fst . zip [0..] $ contents
+        label :: Int -> String
         label = freeze . sdIndexLabel $ x
-        extrude :: Int -> MomentIO (Link Int)
-
-        extrude y = (liftIO $ preLink tab) >>= \l -> softLink l label y
-    softs <- sequence . map extrude $ indices
-
-    let bChunks = (`chunksOf`softs) <$> bPagesize
-        eSofts = map blood softs
-        bSofts = (!!) <$> bChunks <*> (facts current)
-        eActua = priorityUnion (((-1) <$ rumors current):eSofts)
+        bIndex :: Behavior [[Int]]
+        bIndex = (`chunksOf`indices) <$> bPagesize
+        bShows :: Behavior ([Row] -> [Bool])
+        bShows = verity <$> ((!!) <$> bIndex <*> facts current)
         valueChunks = bValueChunks x
         curValues = (!!) <$> valueChunks <*> facts current
+        extrude :: Int -> MomentIO (Link Int)
+        extrude y =
+          do { l <- liftIO $ preLink tab;
+               sink l [ visible :== (!!y) <$> bShow ];
+               softLink l label y;
+             }
+
+    softs <- sequence . map extrude $ indices
+
+    let
+        bChunks :: Behavior [[Link Int]]
+        bChunks = (`chunksOf`softs) <$> bPagesize
+        eSofts :: [Event Int]
+        eSofts = map blood softs
+        bSofts :: Behavior [Link Int]
+        bSofts = (!!) <$> bChunks <*> (facts current)
+        eActua :: Event Int
+        eActua = priorityUnion (((-1) <$ rumors current):eSofts)
+        bAllRows :: Behavior [Row]
+        bAllRows = zipWith <$> (flux . wrap $ format) <*> (concat <$> valueChunks) <*> (concat <$> bChunks)
+        bShow :: Behavior [Bool]
+        bShow = bShows <*> bAllRows
         bRows :: Behavior [Row]
         bRows = zipWith <$> (flux . wrap $ format) <*> curValues <*> bSofts
 
     softBox <- tabulate tab $ combine (collect format) bRows
+    --redrawRows bShows bAllRows
+
 
     let _cast = ECast softBox
         _actuate = tidings (pure (-1)) $ eActua

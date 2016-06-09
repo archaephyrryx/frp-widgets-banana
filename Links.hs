@@ -14,7 +14,7 @@
 module Widgets.Links where
 
 import Widgets.Core
-import Util
+import Util hiding (Visible, visible)
 
 -- | Unified SoftLink and LiquidLink
 --
@@ -40,6 +40,9 @@ data Coil a = Coil { _coil :: LButton
 
 instance Widget (Link a) where
   widget = widget . _link
+instance Visible (Link a) where
+  visible = castAttr _link visible
+  refresh = refresh . _link
 
 uncoil :: Coil a -> Link a
 uncoil (Coil l c o) = corelink l o
