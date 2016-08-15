@@ -31,6 +31,13 @@ data Item where
 instance Widget Item where
   widget (Item x) = widget x
 
+instance Visible Item where
+  visible = newAttr "visible" getVis setVis
+    where
+      getVis (Item x) = get x visible
+      setVis (Item x) b = set x [ visible := b ]
+  refresh (Item x) = refresh x
+
 instance Widget Row where
     widget = row 5 . map widget . _items
 
