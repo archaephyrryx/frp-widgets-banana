@@ -13,10 +13,20 @@ import Widgets.Core hiding (Table, Row)
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
 
-type Table = Panel ()
+newtype Table = Table { _tab :: Panel () } deriving (Typeable)
+instance Widget Table where
+  widget = widget._tab
+
+instance Form Table where
+  layout = castAttr _tab layout
+
+instance Visible Table where
+  visible = castAttr _tab visible
+  refresh = refresh . _tab
+
 
 table :: Window w -> [Prop (Panel ())] -> IO Table
-table w p = panel w p
+table w p = panel w p >>= return.Table
 
 data Tabular = Tabular { _table :: Table
                        , _rows :: Behavior [Row]

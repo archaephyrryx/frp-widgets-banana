@@ -1,5 +1,4 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE RecursiveDo           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -87,7 +86,7 @@ sdIndexLabel c@(Case{..}) = Static $ labor . index
 
 -- | Generate a generic Cast from a CastType and the table frame it will occupy
 genCast :: CastType a -> Table -> MomentIO Cast
-genCast x@(Cask{..}) tab = mdo
+genCast x@(Cask{..}) tab@(Table _tab) = do
     let
         indexChunks :: Behavior [[Int]] -- ^ values, chunked by pagesize
         indexChunks = bIndexChunks x
@@ -96,7 +95,7 @@ genCast x@(Cask{..}) tab = mdo
         bLabelon :: Behavior (Int -> String) -- ^ label converter: index to value-string
         bLabelon = flux . sdIndexLabel $ x
         secrete :: Behavior Int -> MomentIO (Link Int) -- ^ convert the reactive index in a static position to its liquidlink
-        secrete y = (liftIO $ preLink tab) >>= \l -> liquidLink l bLabelon y
+        secrete y = (liftIO $ preLink _tab) >>= \l -> liquidLink l bLabelon y
     -- generate the full complement of liquidlinks for the table
     liquids <- sequence . map secrete $ bIndices
     let
@@ -119,7 +118,7 @@ genCast x@(Cask{..}) tab = mdo
     let _cast = ECast liquidBox
         _actuate = tidings (pure (-1)) $ eActua
     return Cast{..}
-genCast x@(Case{..}) tab = mdo
+genCast x@(Case{..}) tab@(Table _tab) = mdo
     let
         indices :: [Int]
         indices = map fst . zip [0..] $ contents
@@ -133,7 +132,7 @@ genCast x@(Case{..}) tab = mdo
         curValues = (!!) <$> valueChunks <*> facts current
         extrude :: Int -> MomentIO (Link Int)
         extrude y =
-          do { l <- liftIO $ preLink tab;
+          do { l <- liftIO $ preLink _tab;
                sink l [ visible :== (!!y) <$> bShow ];
                softLink l label y;
              }
