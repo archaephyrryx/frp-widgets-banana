@@ -43,6 +43,8 @@ instance Widget (Link a) where
 instance Visible (Link a) where
   visible = castAttr _link visible
   refresh = refresh . _link
+instance Able (Link a) where
+  enabled = castAttr _link enabled
 
 uncoil :: Coil a -> Link a
 uncoil (Coil l c o) = corelink l o
@@ -61,6 +63,11 @@ rubicon LiquidLink{..} = Dynamic _flux
 blood :: Link a -> Event a
 blood (SoftLink{..}) = _crucial
 blood (LiquidLink{..}) = _fluid
+
+-- | Behavior for equality of behavior and link value
+match :: (Eq a) => Link a -> Behavior a -> Behavior Bool
+match (SoftLink{..}) b = (_crux==) <$> b
+match (LiquidLink{..}) b = (==) <$> _flux <*> b
 
 type LButton = Button ()
 
@@ -83,6 +90,18 @@ softLink soft dval grist = do
   let _coil = soft
       _core = Static grist
       _omen = grist <$ click
+  return . uncoil $ Coil{..}
+
+voidLink :: LButton
+         -> String
+         -> MomentIO (Link ())
+voidLink void s = do
+  liftIO $ set void [ text := s ]
+  click <- eClick void
+
+  let _coil = void
+      _core = Static ()
+      _omen = () <$ click
   return . uncoil $ Coil{..}
 
 liquidLink :: LButton

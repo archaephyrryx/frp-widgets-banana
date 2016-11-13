@@ -1,12 +1,5 @@
---{-# LANGUAGE AllowAmbiguousTypes       #-}
---{-# LANGUAGE FlexibleContexts          #-}
---{-# LANGUAGE FlexibleInstances         #-}
---{-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE DeriveDataTypeable        #-}
---{-# LANGUAGE NoMonoLocalBinds          #-}
---{-# LANGUAGE ImpredicativeTypes        #-}
---{-# LANGUAGE RankNTypes                #-}
 module Widgets.Group where
 
 import Widgets.Core hiding (Table, Row)
@@ -19,6 +12,7 @@ import Data.IORef
 data Group = Group { _members :: [Item]
                    , _layout :: [Item] -> Layout
                    }
+                   deriving (Typeable)
 
 instance Widget Group where
   widget = _layout <^> _members

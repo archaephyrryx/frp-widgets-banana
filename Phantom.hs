@@ -4,6 +4,7 @@
 --{-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE RecordWildCards           #-}
 --{-# LANGUAGE NoMonoLocalBinds          #-}
 --{-# LANGUAGE ImpredicativeTypes        #-}
 --{-# LANGUAGE RankNTypes                #-}
@@ -12,10 +13,11 @@
 module Widgets.Phantom where
 
 import Widgets.Core hiding (Table, Row)
+import Widgets.Table
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
 import Widgets.Table (Item(..))
-import Util ((<^>))
+import Util ((<^>), (.=), only)
 import Data.Array
 import Data.Function (on)
 
@@ -42,7 +44,6 @@ eclipse :: (a -> Behavior Bool) -> Aspect a -> MomentIO ()
 eclipse f (Edifice c e) = sink c [ visible :== (f e) ]
 eclipse f (Artifice c e t) = sink c [ visible :== (&&) <$> f e <*> t ]
 
-
 -- | Widget consisting of all of the possible aspects of a static frame, which focuses only one at a
 -- time (though the focused aspect may be invisible)
 data Phantom a = Phantom { _aspects :: [Aspect a]
@@ -50,7 +51,7 @@ data Phantom a = Phantom { _aspects :: [Aspect a]
                          }
 
 instance Widget (Phantom a) where
-  widget = row 5 . map (widget._construct) . _aspects
+  widget = row 0 . map (widget._construct) . _aspects
 
 -- | Create a `Phantom` widget from a list of aspects and an invocation behavior
 phantom :: (Enum a, Eq a) => [Aspect a] -> Behavior a -> MomentIO (Phantom a)
@@ -58,3 +59,17 @@ phantom as mf = do
   let nascence = (<$> mf) . (==)
   forM as (eclipse nascence)
   return $ Phantom as mf
+
+data Reaper a = Reaper { _field :: Table
+                       , _harvest :: Phantom a
+                       , _specter :: Behavior Item
+                       }
+
+instance Widget (Reaper a) where
+  widget = widget . _field
+
+reap :: (Enum a, Eq a) => Table -> Phantom a -> MomentIO (Reaper a)
+reap plot (Phantom{..}) = do
+  let apparition = (\x -> _construct . only . filter (_epithet.=x) $ _aspects) <$> _manifest
+  sink plot [ layout :== widget <$> apparition ]
+  return $ Reaper plot (Phantom{..}) apparition

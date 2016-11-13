@@ -1,7 +1,13 @@
-{-# LANGUAGE RecordWildCards, RecursiveDo, ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Widgets.Ranger where
 
+import Util (andM)
 import Widgets.Core
 
 -- | A 'Ranger', which consists of an incrementor and decrementor for a
@@ -16,7 +22,7 @@ data Range = Range
   { _prev :: Button ()
   , _cur  :: StaticText ()
   , _next :: Button ()
-  }
+  } deriving (Typeable)
 
 range' :: Window a -> [Prop (Button ())] -> [Prop (StaticText ())] -> [Prop (Button ())] -> IO (Range)
 range' f p c n = Range <$> button f p <*> staticText f c <*> button f n
@@ -31,6 +37,30 @@ instance Courier (Ranger a) a where
   type Element (Ranger a) = Range
   tide = _currentRG
   element = _rangeRG
+
+instance Visible Range where
+  visible = newAttr "visible" getVis setVis
+    where
+      getVis :: Range -> IO Bool
+      getVis =
+        let f :: Visible a => a -> IO Bool
+            f = (flip get visible)
+                in ((andM.).andM) <$> f._prev
+                                  <*> f._cur
+                                  <*> f._next
+      setVis :: Range -> Bool -> IO ()
+      setVis r b =
+        let f :: Visible a => a -> IO ()
+            f = flip set [ visible := b ]
+         in (((>>).).(>>)) <$> f._prev
+                           <*> f._cur
+                           <*> f._next $ r
+
+  refresh = (((>>).).(>>)) <$> refresh._prev
+                           <*> refresh._cur
+                           <*> refresh._next
+
+
 
 -- | Create a 'RelNav'.
 ranger :: (Ord a, Enum a)
