@@ -34,6 +34,18 @@ instance Courier RText String where
 preText :: Window w -> IO RStaticText
 preText w = staticText w []
 
+frozenText :: RStaticText
+           -> String
+           -> MomentIO (RText)
+frozenText t s = do
+  liftIO $ set t [ text := s ]
+  let _box = t
+      _msg = Static s
+      _dlt = never
+  return RText{..}
+
+
+
 rText :: RStaticText
       -> StaticDynamic String
       -> Event ()

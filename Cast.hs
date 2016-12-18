@@ -39,8 +39,13 @@ lbTranspose :: [Behavior a] -> Behavior [a]
 lbTranspose = foldr (\x acc -> (:) <$> x <*> acc) (pure [])
 
 
+-- | Function from Cast element to the link-label
 type Label a = StaticDynamic (a -> String)
+
+-- | Function from Cast element and Link to full Cast row
 type Wrapper a = StaticDynamic (a -> Link Int -> Row)
+
+-- | Transformer from flat row-list to final row-list (enables gridding for Obscurae)
 type Collector = StaticDynamic ([Row] -> [Row])
 
 -- | Definition of the elemental layout of a cast, determining how each item is ultimately displayed
@@ -48,10 +53,19 @@ data Format a = Format { label :: Label a, wrap :: Wrapper a, collect :: Collect
 
 -- | Definition of the functional content of a cast, determining the items overall and which are in
 -- focus at any given time, as well as the format definition
-data CastType a = Cask { bContents :: Behavior [a],  pagesize ::          Int, current :: Tidings Int, format :: Format a }
-                | Case { contents  ::          [a], bPagesize :: Behavior Int, current :: Tidings Int, format :: Format a }
+data CastType a = Cask { bContents :: Behavior [a]
+                       , pagesize  :: Int
+                       , current   :: Tidings Int
+                       , format    :: Format a
+                       }
+                | Case { contents  :: [a]
+                       , bPagesize :: Behavior Int
+                       , current   :: Tidings Int
+                       , format    :: Format a
+                       }
 
 
+-- | Returns the index of the final page of a Cast
 bFinal :: CastType a -> Behavior Int
 bFinal x = pred <$> bFinal' x
   where
@@ -84,26 +98,53 @@ sdIndexLabel c@(Case{..}) = Static $ labor . index
     labor = freeze . label $ format
     index = (contents!!)
 
+
+synthesize :: CastType a -> Panel () ->  MomentIO ([Link Int])
+synthesize x@(Cask{..}) _tab = do
+  let
+      -- Reactive list of indices on current page
+      bCurrentPage :: Behavior [Int]
+      bCurrentPage = (!!) <$> bIndexChunks x <*> facts current
+
+      -- List of reactive indices of current page
+      indexBs :: [Behavior Int]
+      indexBs = blTranspose pagesize (-1) bCurrentPage
+
+      -- Create link from button and reactive index
+      generate :: Behavior Int -> LButton -> MomentIO (Link Int)
+      generate b l = liquidLink l (flux . sdIndexLabel $ x) b
+
+      -- Convert the reactive index in a static position to its liquidlink
+      produce :: Behavior Int -> MomentIO (Link Int)
+      produce b = (liftIO $ preLink _tab) >>= generate b
+
+  mapM produce indexBs
+
+
+synthesize x@(Case{..}) _tab = do
+  let
+      indices :: [Int]
+      indices = indicate contents
+
+      label :: Int -> String -- Determines text of nth SoftLink
+      label = freeze . sdIndexLabel $ x
+
+
+      extrude :: Int -> MomentIO (Link Int)
+      extrude y = do { l <- liftIO $ preLink _tab;
+                       -- sink l [ visible :== (!!y) <$> bShow ];
+                       softLink l label y;
+                     }
+
+  mapM extrude indices
+
+
+
+
 -- | Generate a generic Cast from a CastType and the table frame it will occupy
 genCast :: CastType a -> Table -> MomentIO Cast
 genCast x@(Cask{..}) tab@(Table _tab) = do
-    let
-        indexChunks :: Behavior [[Int]] -- ^ values, chunked by pagesize
-        indexChunks = bIndexChunks x
-        bIndices :: [Behavior Int] -- ^ collated values in the current chunk
-        bIndices = blTranspose pagesize (-1) $ (!!) <$> indexChunks <*> (facts current)
-        bLabelon :: Behavior (Int -> String) -- ^ label converter: index to value-string
-        bLabelon = flux . sdIndexLabel $ x
-        secrete :: Behavior Int -> MomentIO (Link Int) -- ^ convert the reactive index in a static position to its liquidlink
-        secrete y = (liftIO $ preLink _tab) >>= \l -> liquidLink l bLabelon y
-    -- generate the full complement of liquidlinks for the table
-    liquids <- sequence . map secrete $ bIndices
-    let
-        eLiquids = map portents liquids
-        -- unify the index-events of all liquidlinks in the table
-        eActua = priorityUnion (((-1) <$ rumors current):eLiquids)
-        sdCollect = collect $ format
-        sdWrap = wrap $ format
+    liquids <- synthesize x _tab
     let
         valueChunks = bValueChunks x
         -- current range of values
@@ -112,55 +153,48 @@ genCast x@(Cask{..}) tab@(Table _tab) = do
         bLinks :: Behavior [Link Int]
         bLinks = (`filtrate`liquids) <$> (lbTranspose $ map (((>=0) <$>).(flux.rubicon)) liquids)
         rawRows :: Behavior [Row]
-        rawRows = zipWith <$> flux sdWrap <*> bValues <*> bLinks
-    liquidBox <- tabulate tab $ combine sdCollect rawRows
+        rawRows = zipWith <$> flux (wrap format) <*> bValues <*> bLinks
+    liquidBox <- tabulate tab $ combine (collect format) rawRows
 
     let _cast = ECast liquidBox
-        _actuate = tidings (pure (-1)) $ eActua
+        _actuate = tidings (pure (-1)) $ priorityUnion (((-1) <$ rumors current):map portents liquids)
     return Cast{..}
-genCast x@(Case{..}) tab@(Table _tab) = mdo
-    let
-        indices :: [Int]
-        indices = map fst . zip [0..] $ contents
-        label :: Int -> String
-        label = freeze . sdIndexLabel $ x
-        bIndex :: Behavior [[Int]]
-        bIndex = (`chunksOf`indices) <$> bPagesize
-        bShows :: Behavior ([Row] -> [Bool])
-        bShows = verity <$> ((!!) <$> bIndex <*> facts current)
-        valueChunks = bValueChunks x
-        curValues = (!!) <$> valueChunks <*> facts current
-        extrude :: Int -> MomentIO (Link Int)
-        extrude y =
-          do { l <- liftIO $ preLink _tab;
-               sink l [ visible :== (!!y) <$> bShow ];
-               softLink l label y;
-             }
-
-    softs <- sequence . map extrude $ indices
+genCast x@(Case{..}) tab@(Table _tab) = do --mdo
+    softs <- synthesize x _tab
 
     let
-        bChunks :: Behavior [[Link Int]]
-        bChunks = (`chunksOf`softs) <$> bPagesize
+
+        bCur :: Behavior Int
+        bCur = facts current
+
+        bPageNumbers :: Behavior [[Int]] -- Lists of indexes for each page
+        bPageNumbers = (`chunksOf`(indicate contents)) <$> bPagesize
+        bShows :: Behavior ([Row] -> [Bool]) -- Indicator function for paged-in rows
+        bShows = verity <$> ((!!) <$> bPageNumbers <*> bCur)
+
         eSofts :: [Event Int]
         eSofts = map blood softs
-        bSofts :: Behavior [Link Int]
-        bSofts = (!!) <$> bChunks <*> (facts current)
-        eActua :: Event Int
-        eActua = priorityUnion (((-1) <$ rumors current):eSofts)
-        bAllRows :: Behavior [Row]
-        bAllRows = zipWith <$> (flux . wrap $ format) <*> (concat <$> valueChunks) <*> (concat <$> bChunks)
+        bChunks :: Behavior [[Link Int]]
+        bChunks = (`chunksOf`softs) <$> bPagesize
+        allRows :: Behavior [Row]
+        allRows = (\x -> zipWith x contents softs) <$> (flux . wrap $ format)
         bShow :: Behavior [Bool]
-        bShow = bShows <*> bAllRows
+        bShow = bShows <^> allRows
+        bSofts :: Behavior [Link Int]
+        bSofts = (!!) <$> bChunks <*> bCur
+
+        curValues = (!!) <$> bValueChunks x <*> bCur
         bRows :: Behavior [Row]
         bRows = zipWith <$> (flux . wrap $ format) <*> curValues <*> bSofts
+
+    flip mapM softs (\SoftLink{..} -> sink _link [ visible :== (!!(_crux)) <$> bShow ])
 
     softBox <- tabulate tab $ combine (collect format) bRows
     --redrawRows bShows bAllRows
 
 
     let _cast = ECast softBox
-        _actuate = tidings (pure (-1)) $ eActua
+        _actuate = tidings (pure (-1)) $ priorityUnion (((-1) <$ rumors current):eSofts)
     return Cast{..}
 
 {-
