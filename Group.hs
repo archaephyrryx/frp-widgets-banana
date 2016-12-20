@@ -6,7 +6,6 @@ import Widgets.Core hiding (Table, Row)
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
 import Widgets.Table (Item(..))
-import Util ((<^>))
 import Data.IORef
 
 data Group = Group { _members :: [Item]
@@ -14,8 +13,12 @@ data Group = Group { _members :: [Item]
                    }
                    deriving (Typeable)
 
+{-# INLINE nullGroup #-}
+nullGroup :: Group
+nullGroup = Group { _members = [] , _layout = (const (nullLayouts!!0)) }
+
 instance Widget Group where
-  widget = _layout <^> _members
+  widget = dynamic . (_layout <*> _members)
 
 instance Visible Group where
   visible = newAttr "visible" getVis setVis

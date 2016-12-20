@@ -11,7 +11,7 @@ import Widgets.Obscura
 import Widgets.Ranger
 import Widgets.Table
 import Data.List.Split
-import Util hiding (visible)
+import Util hiding (visible, Visible)
 
 -- | Widget consisting of a paged table of widgets containing buttons, which keeps track of the
 -- index of widgets as their buttons are clicked
@@ -28,6 +28,10 @@ instance Courier Cast Int where
   type Element Cast = ECast
   element = _cast
   tide = _actuate
+
+instance Visible Cast where
+  visible = castAttr (_table._elem._cast) visible
+  refresh = refresh . _table . _elem . _cast
 
 -- | Given a list length and a default value, transform a @Behavior [a]@ to a $[Behavior a]$, with
 -- any out-of-range elements being the constant behavior containing the default value
@@ -97,7 +101,6 @@ sdIndexLabel c@(Case{..}) = Static $ labor . index
   where
     labor = freeze . label $ format
     index = (contents!!)
-
 
 synthesize :: CastType a -> Panel () ->  MomentIO ([Link Int])
 synthesize x@(Cask{..}) _tab = do
@@ -179,7 +182,7 @@ genCast x@(Case{..}) tab@(Table _tab) = do --mdo
         allRows :: Behavior [Row]
         allRows = (\x -> zipWith x contents softs) <$> (flux . wrap $ format)
         bShow :: Behavior [Bool]
-        bShow = bShows <^> allRows
+        bShow = bShows <*> allRows
         bSofts :: Behavior [Link Int]
         bSofts = (!!) <$> bChunks <*> bCur
 
@@ -190,7 +193,7 @@ genCast x@(Case{..}) tab@(Table _tab) = do --mdo
     flip mapM softs (\SoftLink{..} -> sink _link [ visible :== (!!(_crux)) <$> bShow ])
 
     softBox <- tabulate tab $ combine (collect format) bRows
-    --redrawRows bShows bAllRows
+    redrawRows bShows allRows
 
 
     let _cast = ECast softBox

@@ -12,10 +12,12 @@ module Widgets.Table where
 import Widgets.Core hiding (Table, Row)
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
+import Util (mAppend)
 
 newtype Table = Table { _tab :: Panel () } deriving (Typeable)
+
 instance Widget Table where
-  widget = widget._tab
+  widget = margin 5 . dynamic . alignTopLeft . widget . _tab
 
 instance Form Table where
   layout = castAttr _tab layout
@@ -72,5 +74,5 @@ tabulate :: Table
          -> Behavior [Row]
          -> MomentIO Tabular
 tabulate tab bRows = do
-    sink tab [ layout :== (column 5 . map widget) <$> bRows ]
-    return $ Tabular tab bRows
+  sink tab [ layout :== column 5 . map widget <$> bRows ]
+  return $ Tabular tab bRows
