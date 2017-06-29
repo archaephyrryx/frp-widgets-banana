@@ -90,8 +90,9 @@ reap plot (Phantom{..}) = do
 
 -- Refresh the display of a specter
 reharvest :: Reaper a -> Event () -> MomentIO ()
-reharvest (Reaper{..}) e = do
+reharvest (Reaper{..}) e = relay (_tab$_field) e {- do
   let applicator = (\x -> \() -> refresh x >> windowReLayout (_tab$_field)) <$> _specter
       eFresh = applicator <@> e
   reactimate eFresh
 
+-}

@@ -4,13 +4,21 @@
 module Widgets.Core.UI ( module Widgets.Core.UI
                        , module Graphics.UI.WX
                        , module Graphics.UI.WXCore
+                       , module Graphics.UI.WXCore.WxcTypes
                        ) where
 
 import Graphics.UI.WXCore hiding (Event, Timer, empty, Identity, newEvent)
+import Graphics.UI.WXCore.Frame
+import Graphics.UI.WXCore.WxcClassesAL
+import Graphics.UI.WXCore.WxcClassesMZ
+import Graphics.UI.WXCore.WxcTypes
 import Graphics.UI.WX.Attributes
 import Graphics.UI.WX hiding (Event, newEvent, empty, Identity)
 import Util (one)
 import Data.Stringent
+
+elastic :: Layout -> Layout
+elastic = margin 2 . dynamic
 
 enboxed :: Layout -> Layout
 enboxed l = column m [ hrule w, row m [ vrule w, l, vrule w], hrule w]

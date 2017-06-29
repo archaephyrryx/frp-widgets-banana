@@ -51,3 +51,7 @@ drown w p'' =
 
 eClick :: Commanding w => w -> MomentIO (Event ())
 eClick x = event0 x command
+
+relay :: Window a -> Event () -> MomentIO ()
+relay w e = reactimate $
+  (windowReLayout w) <$ e
