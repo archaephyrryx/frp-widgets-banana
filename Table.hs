@@ -12,12 +12,12 @@ module Widgets.Table where
 import Widgets.Core hiding (Table, Row)
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
-import Util (mAppend)
+import Util (mapend, reveal)
 
 newtype Table = Table { _tab :: Panel () } deriving (Typeable)
 
 instance Widget Table where
-  widget = margin 5 . dynamic . alignTopLeft . widget . _tab
+  widget = margin 10 . boxed "Table" . dynamic . widget . _tab
 
 instance Form Table where
   layout = castAttr _tab layout
@@ -35,10 +35,13 @@ data Tabular = Tabular { _table :: Table
                        }
 
 data Row = Row { _items :: [Item] }
-  deriving (Typeable)
+  deriving (Typeable, Show)
 
 data Item where
   Item :: (Typeable w, Widget w, Visible w) => w -> Item -- = forall w. (Typeable w, Widget w) => Item w
+
+instance Show Item where
+  show (Item x) = reveal x
 
 instance Widget Item where
   widget (Item x) = widget x

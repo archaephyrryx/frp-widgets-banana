@@ -12,6 +12,8 @@ import Widgets.Ranger
 import Widgets.Table
 import Data.List.Split
 import Util hiding (visible, Visible)
+import Prelude hiding ((!!))
+import Util.List.Safe ((!!))
 
 -- | Widget consisting of a paged table of widgets containing buttons, which keeps track of the
 -- index of widgets as their buttons are clicked

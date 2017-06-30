@@ -22,6 +22,9 @@ data RText = RText { _box :: RStaticText -- ^ UI component
 instance Widget RText where
   widget = widget . _box
 
+instance Show RText where
+  show = show . _box
+
 instance Visible RText where
   visible = castAttr _box visible
   refresh = refresh . _box
