@@ -39,7 +39,7 @@ preText w = staticText w []
 
 frozenText :: RStaticText
            -> String
-           -> MomentIO (RText)
+           -> MomentIO RText
 frozenText t s = do
   liftIO $ set t [ text := s ]
   let _box = t
@@ -48,11 +48,15 @@ frozenText t s = do
   return RText{..}
 
 
+frozenText' :: Window w -> String -> MomentIO RText
+frozenText' w s = do
+  t <- liftIO $ preText w
+  frozenText t s
 
 rText :: RStaticText
       -> StaticDynamic String
       -> Event ()
-      -> MomentIO (RText)
+      -> MomentIO RText
 rText t str sync = do
   drown t [ text :=~ str ]
   let _box = t
@@ -63,11 +67,7 @@ rText t str sync = do
 rText' :: RStaticText
        -> ValText
        -> Event ()
-       -> MomentIO (RText)
-rText' t vt sync = do
+       -> MomentIO RText
+rText' t vt sync =
   let str = sdText vt
-  drown t [ text :=~ str ]
-  let _box = t
-      _msg = str
-      _dlt = sync
-  return RText{..}
+   in rText t str sync
