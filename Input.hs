@@ -10,25 +10,28 @@ import Widgets.Core
 import Util hiding (Visible, visible)
 import Control.Monad
 
+
 type RTextCtrl = TextCtrl ()
 
-data TextInput = TextInput { _input :: RTextCtrl -- ^ UI component
-                           , _value :: Tidings String
-                           }
-                           deriving (Typeable)
+data ValueInput a = ValueInput { _input :: RTextCtrl -- ^ UI component
+                               , _value :: Tidings a
+                               } deriving (Typeable)
 
-instance Widget TextInput where
+
+type TextInput = ValueInput String
+
+instance Widget (ValueInput a) where
   widget = widget . _input
 
-instance Show TextInput where
+instance Show (ValueInput a) where
   show = show . _input
 
-instance Visible TextInput where
+instance Visible (ValueInput a) where
   visible = castAttr _input visible
   refresh = refresh . _input
 
-instance Courier TextInput String where
-  type Element TextInput = RTextCtrl
+instance Courier (ValueInput a) a where
+  type Element (ValueInput a) = RTextCtrl
   element = _input
   tide = _value
 
@@ -37,6 +40,19 @@ preInput w = textEntry w []
 
 preInputML :: Window w -> IO RTextCtrl
 preInputML w = textCtrl w []
+
+genInput :: RTextCtrl
+         -> Behavior a
+         -> (a -> String)
+         -> (String -> Maybe a)
+         -> MomentIO (ValueInput a)
+genInput t bVal f g = do
+  sink t [ text :== f <$> bVal ]
+  eText <- eventText t
+
+  let _input = t
+      _value = tidings bVal $ filterJust $ g <$> eText
+  return ValueInput{..}
 
 input :: RTextCtrl
       -> Behavior String
@@ -48,7 +64,7 @@ input t bVal = do
 
   let _input = t
       _value = tidings bVal eText
-  return TextInput{..}
+  return ValueInput{..}
 
 input' :: Window w -> Behavior String -> MomentIO TextInput
 input' w bVal = do
@@ -59,3 +75,8 @@ inputML :: Window w -> Behavior String -> MomentIO TextInput
 inputML w bVal = do
   t <- liftIO $ preInputML w
   input t bVal
+
+intInput :: Window w -> Behavior Int -> MomentIO (ValueInput Int)
+intInput w bVal = do
+  t <- liftIO $ preInput w
+  genInput t bVal show tryRead

@@ -14,23 +14,22 @@ import Util hiding (Visible, visible)
 import Control.Monad
 
 
+data Field a = Field { _labelString :: String
+                     , _label :: RText
+                     , _field :: ValueInput a
+                     } deriving (Typeable)
 
+type TextField = Field String
 
-data Field = Field { _labelString :: String
-                   , _label :: RText
-                   , _field :: TextInput
-                   }
-                   deriving (Typeable)
-
-instance Widget Field where
+instance Widget (Field a) where
   widget x = row 5 [ widget . _label $ x , widget . _field $ x ]
 
-instance Courier Field String where
-  type Element Field = RTextCtrl
+instance Courier (Field a) a where
+  type Element (Field a) = RTextCtrl
   element = element . _field
   tide = tide . _field
 
-field :: String -> RStaticText -> TextInput -> MomentIO Field
+field :: String -> RStaticText -> ValueInput a -> MomentIO (Field a)
 field str lab inp = do
   lab' <- frozenText lab str
   let _labelString = str
@@ -38,15 +37,21 @@ field str lab inp = do
       _field = inp
    in return Field{..}
 
-field' :: Window w -> String -> Behavior String -> MomentIO Field
+field' :: Window w -> String -> Behavior String -> MomentIO TextField
 field' w str bVal = do
   lab <- liftIO $ preText w
   inp <- input' w bVal
   field str lab inp
 
 
-fieldML :: Window w -> String -> Behavior String -> MomentIO Field
+fieldML :: Window w -> String -> Behavior String -> MomentIO TextField
 fieldML w str bVal = do
   lab <- liftIO $ preText w
   inp <- inputML w bVal
+  field str lab inp
+
+intField :: Window w -> String -> Behavior Int -> MomentIO (Field Int)
+intField w str bVal = do
+  lab <- liftIO $ preText w
+  inp <- intInput w bVal
   field str lab inp
