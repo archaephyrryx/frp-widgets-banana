@@ -1,17 +1,17 @@
 name:                frp-widgets-banana
 version:             0.1.0.0
-github:              githubuser/frp-widgets-banana
+github:              archaephyrryx/frp-widgets-banana
 license:             BSD3
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
+author:              Peter Duchovni
+maintainer:          caufeminecraft+github@gmail.com
+copyright:           2017 Peter Duchovni
 
 extra-source-files:
 - README.md
 - ChangeLog.md
 
 # Metadata used when publishing your package
-synopsis:            Short description of your package
+synopsis:            Custom widget library for WxHaskell + reactive-banana
 # category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
@@ -20,29 +20,28 @@ synopsis:            Short description of your package
 description:         Please see the README on Github at <https://github.com/githubuser/frp-widgets-banana#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+  - base >= 4.7 && < 5
+  - futility >= 0.1
+  - lens
+  - containers >=0.5
+  - split >=0.2
+    #- template-haskell >=2.11.1.0
+    #- unix >=2.7
+    #- mtl >=2.1
+    #- bifunctors >=5
+    #- safecopy >=0.8
+    #- reform >=0.2
+    #- transformers >=0.3
+    #- aeson >=0.7
+    #- vector >=0.10
+  - array >=0.5
+  - wx >=0.92 && <0.93
+  - wxc >=0.92 && <0.93
+  - wxcore >=0.92 && <0.93
+  - wxdirect >=0.92 && <0.93
+  - reactive-banana >= 1.1 && <1.2
+    #- containers >=0.5 && <0.6
+    #- primitive
 
 library:
   source-dirs: src
-
-executables:
-  frp-widgets-banana-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - frp-widgets-banana
-
-tests:
-  frp-widgets-banana-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - frp-widgets-banana
