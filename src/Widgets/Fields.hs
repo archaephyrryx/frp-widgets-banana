@@ -29,6 +29,17 @@ instance Courier (Field a) a where
   element = element . _field
   tide = tide . _field
 
+instance Visible (Field a) where
+  visible = newAttr "visible" getVis setVis
+    where
+      getVis :: Field a -> IO Bool
+      getVis r = afor (get (_label r) visible) (get (_field r) visible)
+      setVis :: Field a -> Bool -> IO ()
+      setVis r b = set (_label r) [ visible := b ] >> set (_field r) [ visible := b ]
+  refresh = (>>) <$> refresh._label <*> refresh._field
+
+
+
 field :: String -> RStaticText -> ValueInput a -> MomentIO (Field a)
 field str lab inp = do
   lab' <- frozenText lab str
