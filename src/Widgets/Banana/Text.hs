@@ -4,9 +4,9 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-module Widgets.Text where
+module Widgets.Banana.Text where
 
-import Widgets.Core
+import Widgets.Banana.Core
 import Util hiding (Visible, visible)
 import Reactive.ValText
 import Control.Monad

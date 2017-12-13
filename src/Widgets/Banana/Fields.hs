@@ -4,12 +4,12 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-module Widgets.Fields where
+module Widgets.Banana.Fields where
 
-import Widgets.Core
-import Widgets.Input
-import Widgets.Table
-import Widgets.Text
+import Widgets.Banana.Core
+import Widgets.Banana.Input
+import Widgets.Banana.Table
+import Widgets.Banana.Text
 import Util hiding (Visible, visible)
 import Control.Monad
 

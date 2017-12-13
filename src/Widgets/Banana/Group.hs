@@ -1,11 +1,11 @@
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE DeriveDataTypeable        #-}
-module Widgets.Group where
+module Widgets.Banana.Group where
 
-import Widgets.Core hiding (Table, Row)
+import Widgets.Banana.Core hiding (Table, Row)
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
-import Widgets.Table (Item(..))
+import Widgets.Banana.Table (Item(..))
 import Data.IORef
 
 data Group = Group { _members :: [Item]

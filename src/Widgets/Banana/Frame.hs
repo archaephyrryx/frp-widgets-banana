@@ -1,11 +1,11 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE GADTs                 #-}
-module Widgets.Frame where
+module Widgets.Banana.Frame where
 
-import Widgets.Core hiding (Row)
-import Widgets.Table
-import Widgets.Links
+import Widgets.Banana.Core hiding (Row)
+import Widgets.Banana.Table
+import Widgets.Banana.Links
 
 data GenItem a where
   GenItem :: (Typeable (w a), Widget (w a), Visible (w a), Courier (w a) a) => w a -> GenItem a

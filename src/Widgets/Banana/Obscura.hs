@@ -1,9 +1,9 @@
 {-# LANGUAGE RecursiveDo, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, TypeFamilies #-}
 
-module Widgets.Obscura where
+module Widgets.Banana.Obscura where
 
-import Widgets.Core
-import Widgets.Links
+import Widgets.Banana.Core
+import Widgets.Banana.Links
 
 type Obscure = BitmapButton ()
 

@@ -1,11 +1,11 @@
 {-# LANGUAGE RankNTypes, TypeFamilies, TypeSynonymInstances,
     FlexibleInstances #-}
 
-module Widgets.Core.UI ( module Widgets.Core.UI
-                       , module Graphics.UI.WX
-                       , module Graphics.UI.WXCore
-                       , module Graphics.UI.WXCore.WxcTypes
-                       ) where
+module Widgets.Banana.Core.UI ( module Widgets.Banana.Core.UI
+                              , module Graphics.UI.WX
+                              , module Graphics.UI.WXCore
+                              , module Graphics.UI.WXCore.WxcTypes
+                              ) where
 
 import Graphics.UI.WXCore hiding (Event, Timer, empty, Identity, newEvent)
 import Graphics.UI.WXCore.Frame

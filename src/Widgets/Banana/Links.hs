@@ -11,9 +11,9 @@
 {-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE FunctionalDependencies#-}
 {-# LANGUAGE PolyKinds             #-}
-module Widgets.Links where
+module Widgets.Banana.Links where
 
-import Widgets.Core
+import Widgets.Banana.Core
 import Util hiding (Visible, visible)
 
 -- | Unified SoftLink and LiquidLink

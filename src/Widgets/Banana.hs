@@ -1,39 +1,39 @@
 module Widgets.Banana (
-  module Widgets.Banana.Cast,
-  module Widgets.Banana.Core,
-  module Widgets.Banana.Counter,
-  module Widgets.Banana.Fields,
-  module Widgets.Banana.Frame,
-  module Widgets.Banana.Group,
-  module Widgets.Banana.Input,
-  module Widgets.Banana.Links,
-  module Widgets.Banana.MonoSelect,
-  module Widgets.Banana.MultiSelect,
-  module Widgets.Banana.Obscura,
-  module Widgets.Banana.Phantom,
-  module Widgets.Banana.Radio,
-  module Widgets.Banana.Ranger,
-  module Widgets.Banana.Recorder,
-  module Widgets.Banana.Table,
-  module Widgets.Banana.Text,
-  module Widgets.Banana.Tower
+  module Widgets.Cast,
+  module Widgets.Core,
+  module Widgets.Counter,
+  module Widgets.Fields,
+  module Widgets.Frame,
+  module Widgets.Group,
+  module Widgets.Input,
+  module Widgets.Links,
+  module Widgets.MonoSelect,
+  module Widgets.MultiSelect,
+  module Widgets.Obscura,
+  module Widgets.Phantom,
+  module Widgets.Radio,
+  module Widgets.Ranger,
+  module Widgets.Recorder,
+  module Widgets.Table,
+  module Widgets.Text,
+  module Widgets.Tower
 ) where
 
-import qualified Widgets.Cast as Widgets.Banana.Cast
-import qualified Widgets.Core as Widgets.Banana.Core
-import qualified Widgets.Counter as Widgets.Banana.Counter
-import qualified Widgets.Fields as Widgets.Banana.Fields
-import qualified Widgets.Frame as Widgets.Banana.Frame
-import qualified Widgets.Group as Widgets.Banana.Group
-import qualified Widgets.Input as Widgets.Banana.Input
-import qualified Widgets.Links as Widgets.Banana.Links
-import qualified Widgets.MonoSelect as Widgets.Banana.MonoSelect
-import qualified Widgets.MultiSelect as Widgets.Banana.MultiSelect
-import qualified Widgets.Obscura as Widgets.Banana.Obscura
-import qualified Widgets.Phantom as Widgets.Banana.Phantom
-import qualified Widgets.Radio as Widgets.Banana.Radio
-import qualified Widgets.Ranger as Widgets.Banana.Ranger
-import qualified Widgets.Recorder as Widgets.Banana.Recorder
-import qualified Widgets.Table as Widgets.Banana.Table
-import qualified Widgets.Text as Widgets.Banana.Text
-import qualified Widgets.Tower as Widgets.Banana.Tower
+import qualified Widgets.Banana.Cast as Widgets.Cast
+import qualified Widgets.Banana.Core as Widgets.Core
+import qualified Widgets.Banana.Counter as Widgets.Counter
+import qualified Widgets.Banana.Fields as Widgets.Fields
+import qualified Widgets.Banana.Frame as Widgets.Frame
+import qualified Widgets.Banana.Group as Widgets.Group
+import qualified Widgets.Banana.Input as Widgets.Input
+import qualified Widgets.Banana.Links as Widgets.Links
+import qualified Widgets.Banana.MonoSelect as Widgets.MonoSelect
+import qualified Widgets.Banana.MultiSelect as Widgets.MultiSelect
+import qualified Widgets.Banana.Obscura as Widgets.Obscura
+import qualified Widgets.Banana.Phantom as Widgets.Phantom
+import qualified Widgets.Banana.Radio as Widgets.Radio
+import qualified Widgets.Banana.Ranger as Widgets.Ranger
+import qualified Widgets.Banana.Recorder as Widgets.Recorder
+import qualified Widgets.Banana.Table as Widgets.Table
+import qualified Widgets.Banana.Text as Widgets.Text
+import qualified Widgets.Banana.Tower as Widgets.Tower

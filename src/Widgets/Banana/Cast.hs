@@ -3,13 +3,13 @@
 {-# LANGUAGE RecursiveDo           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
-module Widgets.Cast where
+module Widgets.Banana.Cast where
 
-import Widgets.Core hiding (wrap, Row, Table, label)
-import Widgets.Links
-import Widgets.Obscura
-import Widgets.Ranger
-import Widgets.Table
+import Widgets.Banana.Core hiding (wrap, Row, Table, label)
+import Widgets.Banana.Links
+import Widgets.Banana.Obscura
+import Widgets.Banana.Ranger
+import Widgets.Banana.Table
 import Data.List.Split
 import Util hiding (visible, Visible)
 import Prelude hiding ((!!))

@@ -2,10 +2,10 @@
 {-# LANGUAGE GADTs              #-}
 {-# LANGUAGE RankNTypes         #-}
 
-module Widgets.Tower where
+module Widgets.Banana.Tower where
 
-import Widgets.Core hiding (Table, Row)
-import Widgets.Table (Table)
+import Widgets.Banana.Core hiding (Table, Row)
+import Widgets.Banana.Table (Table)
 
 data Tower = forall w. (Widget w) =>
      Tower { _pile :: Table

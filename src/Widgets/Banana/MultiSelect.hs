@@ -1,8 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables, RankNTypes, MultiParamTypeClasses, TypeFamilies #-}
 
-module Widgets.MultiSelect where
+module Widgets.Banana.MultiSelect where
 
-import Widgets.Core
+import Widgets.Banana.Core
 
 import qualified Data.Map as Map
 import Data.Map (Map)

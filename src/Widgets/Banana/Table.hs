@@ -7,9 +7,9 @@
 --{-# LANGUAGE NoMonoLocalBinds          #-}
 --{-# LANGUAGE ImpredicativeTypes        #-}
 --{-# LANGUAGE RankNTypes                #-}
-module Widgets.Table where
+module Widgets.Banana.Table where
 
-import Widgets.Core hiding (Table, Row)
+import Widgets.Banana.Core hiding (Table, Row)
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
 import Util (mapend, reveal)

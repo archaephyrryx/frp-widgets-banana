@@ -6,10 +6,10 @@
 {-# LANGUAGE ExplicitForAll        #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Widgets.Counter  where
+module Widgets.Banana.Counter  where
 
 import Util (andM)
-import Widgets.Core
+import Widgets.Banana.Core
 
 -- | A counter widget based loosely on the logic of 'Ranger', without any display for the value
 -- (pure control). Variants allow for just an incrementor, just a decrementor, a +/- counter, and

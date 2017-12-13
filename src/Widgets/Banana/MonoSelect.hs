@@ -1,9 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
 
-module Widgets.MonoSelect where
+module Widgets.Banana.MonoSelect where
 
 
-import Widgets.Core
+import Widgets.Banana.Core
 
 import qualified Data.Map as Map
 import Data.Map (Map)

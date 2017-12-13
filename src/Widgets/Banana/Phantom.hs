@@ -10,13 +10,13 @@
 --{-# LANGUAGE RankNTypes                #-}
 
 -- | A module for displaying one of several different widgets in a static frame, modally
-module Widgets.Phantom where
+module Widgets.Banana.Phantom where
 
-import Widgets.Core hiding (Table, Row)
-import Widgets.Table
+import Widgets.Banana.Core hiding (Table, Row)
+import Widgets.Banana.Table
 import Control.Monad (forM_, sequence_, forM, void)
 import Graphics.UI.WX.Attributes (Attr)
-import Widgets.Table (Item(..))
+import Widgets.Banana.Table (Item(..))
 import Util ((.=), only)
 import Data.Array
 import Data.Function (on)

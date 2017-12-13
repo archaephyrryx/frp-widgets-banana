@@ -5,10 +5,10 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Widgets.Ranger where
+module Widgets.Banana.Ranger where
 
 import Util (andM)
-import Widgets.Core
+import Widgets.Banana.Core
 
 -- | A 'Ranger', which consists of an incrementor and decrementor for a
 -- dynamic range and dynamic value within that range; works for any

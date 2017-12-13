@@ -3,11 +3,11 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TypeFamilies           #-}
-module Widgets.Radio where
+module Widgets.Banana.Radio where
 
-import Widgets.Links
-import Widgets.Table
-import Widgets.Core
+import Widgets.Banana.Links
+import Widgets.Banana.Table
+import Widgets.Banana.Core
 import Control.Monad (forM_, forM)
 
 

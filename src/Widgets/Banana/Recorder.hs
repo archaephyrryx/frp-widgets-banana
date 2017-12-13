@@ -4,16 +4,16 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-module Widgets.Recorder where
+module Widgets.Banana.Recorder where
 
-import Widgets.Core
+import Widgets.Banana.Core
 import Util hiding (Visible, visible)
 import Control.Monad
-import Widgets.Input
-import Widgets.Text
-import Widgets.Table
-import Widgets.Fields
-import Widgets.Links
+import Widgets.Banana.Input
+import Widgets.Banana.Text
+import Widgets.Banana.Table
+import Widgets.Banana.Fields
+import Widgets.Banana.Links
 
 data Recorder = Recorder { _save :: Link String
                          , _load :: Link ()

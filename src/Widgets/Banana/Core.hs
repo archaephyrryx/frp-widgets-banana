@@ -1,14 +1,14 @@
 {-# LANGUAGE TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, GADTs #-}
 
-module Widgets.Core ( Prop''((:=~))
-                    , module Widgets.Core
+module Widgets.Banana.Core ( Prop''((:=~))
+                    , module Widgets.Banana.Core
                     , module Data.Typeable
-                    , module Widgets.Core.UI
-                    , module Widgets.Core.FRP
+                    , module Widgets.Banana.Core.UI
+                    , module Widgets.Banana.Core.FRP
                     ) where
 
-import Widgets.Core.UI
-import Widgets.Core.FRP
+import Widgets.Banana.Core.UI
+import Widgets.Banana.Core.FRP
 import Data.Typeable
 import Util (condense)
 
